@@ -113,20 +113,79 @@ function createTechDecorations(innerRadius, outerRadius) {
   return deco;
 }
 
+function createTickMarks(radius, count, length, width) {
+  let marks = '';
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+    const x1 = CENTER + Math.cos(angle) * radius;
+    const y1 = CENTER + Math.sin(angle) * radius;
+    const x2 = CENTER + Math.cos(angle) * (radius - length);
+    const y2 = CENTER + Math.sin(angle) * (radius - length);
+    marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="white" stroke-width="${width}" />`;
+  }
+  return marks;
+}
+
+function createVerticalCircuitPattern(side) {
+  const xBase = side === 'left' ? CENTER - 280 : CENTER + 280;
+  let circuit = '';
+
+  for (let i = 0; i < 8; i++) {
+    const y = CENTER - 240 + (i * 60);
+    const offset = (i % 2) * 20;
+    const x = side === 'left' ? xBase - offset : xBase + offset;
+
+    circuit += `<circle cx="${x}" cy="${y}" r="8" fill="white" stroke="black" stroke-width="2" />`;
+    circuit += `<circle cx="${x}" cy="${y}" r="3" fill="black" />`;
+
+    if (i < 7) {
+      const nextY = CENTER - 240 + ((i + 1) * 60);
+      const nextOffset = ((i + 1) % 2) * 20;
+      const nextX = side === 'left' ? xBase - nextOffset : xBase + nextOffset;
+      circuit += `<line x1="${x}" y1="${y + 8}" x2="${nextX}" y2="${nextY - 8}" stroke="white" stroke-width="4" />`;
+      circuit += `<line x1="${x}" y1="${y + 8}" x2="${nextX}" y2="${nextY - 8}" stroke="black" stroke-width="2" />`;
+    }
+
+    const branchX = side === 'left' ? x + 30 : x - 30;
+    circuit += `<line x1="${x}" y1="${y}" x2="${branchX}" y2="${y}" stroke="white" stroke-width="3" />`;
+    circuit += `<rect x="${branchX - 6}" y="${y - 10}" width="12" height="20" fill="white" stroke="black" stroke-width="2" />`;
+  }
+
+  return circuit;
+}
+
+function createDenseTickRing(radius, majorCount, minorPerMajor) {
+  let ticks = '';
+  const totalTicks = majorCount * minorPerMajor;
+
+  for (let i = 0; i < totalTicks; i++) {
+    const angle = (i / totalTicks) * Math.PI * 2 - Math.PI / 2;
+    const isMajor = i % minorPerMajor === 0;
+    const length = isMajor ? 15 : 8;
+    const width = isMajor ? 3 : 1.5;
+
+    const x1 = CENTER + Math.cos(angle) * radius;
+    const y1 = CENTER + Math.sin(angle) * radius;
+    const x2 = CENTER + Math.cos(angle) * (radius - length);
+    const y2 = CENTER + Math.sin(angle) * (radius - length);
+
+    ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="white" stroke-width="${width}" />`;
+  }
+  return ticks;
+}
+
 async function generateBadge(name, profileUrl, outputPath) {
   const qrDataUrl = await generateQRCode(profileUrl);
-  const qrBase64 = qrDataUrl.split(',')[1];
-
   const nameUpper = name.toUpperCase();
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${SIZE}" height="${SIZE}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
-      <feOffset dx="0" dy="5" result="offsetblur"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="15"/>
+      <feOffset dx="0" dy="8" result="offsetblur"/>
       <feComponentTransfer>
-        <feFuncA type="linear" slope="0.5"/>
+        <feFuncA type="linear" slope="0.6"/>
       </feComponentTransfer>
       <feMerge>
         <feMergeNode/>
@@ -135,35 +194,58 @@ async function generateBadge(name, profileUrl, outputPath) {
     </filter>
   </defs>
 
-  <rect width="${SIZE}" height="${SIZE}" fill="#f0f0f0" />
+  <rect width="${SIZE}" height="${SIZE}" fill="#e8e8e8" />
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="560" fill="black" filter="url(#shadow)" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="570" fill="#333333" opacity="0.4" filter="url(#shadow)" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="560" fill="black" />
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="540" fill="black" stroke="white" stroke-width="8" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="555" fill="none" stroke="white" stroke-width="10" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="545" fill="none" stroke="black" stroke-width="5" />
 
-  ${createBinaryRing(510, 11)}
+  ${createBinaryRing(530, 10)}
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="480" fill="none" stroke="white" stroke-width="3" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="515" fill="none" stroke="white" stroke-width="3" />
+  ${createTickMarks(515, 72, 8, 2)}
 
-  ${createCircularText('AI LEADER', 450, -Math.PI * 0.72, -Math.PI * 0.28, 72, '900')}
+  <circle cx="${CENTER}" cy="${CENTER}" r="500" fill="none" stroke="white" stroke-width="2" />
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="400" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10 10" opacity="0.5" />
+  ${createCircularText('AI LEADER', 470, -Math.PI * 0.7, -Math.PI * 0.3, 95, '900')}
 
-  ${createCircularText(nameUpper, 370, -Math.PI * 0.85, -Math.PI * 0.15, 36, 'bold')}
+  <circle cx="${CENTER}" cy="${CENTER}" r="430" fill="none" stroke="white" stroke-width="2" />
+  ${createDenseTickRing(430, 12, 5)}
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="340" fill="none" stroke="white" stroke-width="2" />
+  ${createCircularText(nameUpper, 395, -Math.PI * 0.82, -Math.PI * 0.18, 42, 'bold')}
 
-  ${createCircuitPattern(240, 330, 48)}
+  <circle cx="${CENTER}" cy="${CENTER}" r="365" fill="none" stroke="white" stroke-width="4" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="360" fill="none" stroke="white" stroke-width="1" />
 
-  ${createTechDecorations(330, 360)}
+  ${createBinaryRing(345, 9)}
 
-  ${createBinaryRing(360, 10)}
+  <circle cx="${CENTER}" cy="${CENTER}" r="330" fill="none" stroke="white" stroke-width="3" />
+  ${createTickMarks(330, 48, 10, 2)}
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="235" fill="white" stroke="black" stroke-width="6" />
+  ${createVerticalCircuitPattern('left')}
+  ${createVerticalCircuitPattern('right')}
 
-  <image x="${CENTER - 200}" y="${CENTER - 200}" width="400" height="400" xlink:href="${qrDataUrl}" />
+  ${createCircuitPattern(245, 320, 64)}
 
-  <circle cx="${CENTER}" cy="${CENTER}" r="540" fill="none" stroke="black" stroke-width="3" opacity="0.2" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="320" fill="none" stroke="white" stroke-width="2" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="315" fill="none" stroke="white" stroke-width="1" stroke-dasharray="5 5" opacity="0.6" />
+
+  ${createBinaryRing(298, 8)}
+
+  <circle cx="${CENTER}" cy="${CENTER}" r="285" fill="none" stroke="white" stroke-width="2" />
+  ${createTickMarks(285, 60, 8, 1.5)}
+
+  ${createTechDecorations(260, 280)}
+
+  <circle cx="${CENTER}" cy="${CENTER}" r="255" fill="none" stroke="white" stroke-width="5" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="248" fill="white" />
+  <circle cx="${CENTER}" cy="${CENTER}" r="245" fill="white" stroke="black" stroke-width="8" />
+
+  <image x="${CENTER - 210}" y="${CENTER - 210}" width="420" height="420" xlink:href="${qrDataUrl}" />
+
+  <circle cx="${CENTER}" cy="${CENTER}" r="555" fill="none" stroke="black" stroke-width="2" opacity="0.3" />
 </svg>`;
 
   const canvas = createCanvas(SIZE, SIZE);
