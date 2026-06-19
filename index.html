@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Leaders Badge Generator</title>
-  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -273,16 +272,8 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
-    // Wait for QRCode library to load
-    window.addEventListener('load', () => {
-      console.log('QRCode available:', typeof QRCode);
-      console.log('window.QRCode:', window.QRCode);
-      if (typeof QRCode === 'undefined' && typeof window.QRCode === 'undefined') {
-        showError('QRCode library failed to load. Please refresh the page.');
-        console.error('QRCode library not loaded');
-      }
-    });
 
     const mockupUrl = 'mockup.png';
     let mockupImg = null;
@@ -435,23 +426,27 @@
     }
 
     async function generateQRCode(url) {
-      // Try to access QRCode from window or global scope
-      const QR = window.QRCode || QRCode;
+      // Use QRCode constructor to generate QR code to canvas
+      const tempDiv = document.createElement('div');
+      const qr = new QRCode(tempDiv, {
+        text: url,
+        width: 500,
+        height: 500,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
 
-      if (typeof QR === 'undefined' || typeof QR.toDataURL !== 'function') {
-        console.error('QRCode object:', QR);
-        throw new Error('QRCode library not loaded or toDataURL method not available');
+      // Wait for QR code to render
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Get the canvas element created by QRCode
+      const canvas = tempDiv.querySelector('canvas');
+      if (!canvas) {
+        throw new Error('Failed to generate QR code canvas');
       }
 
-      return await QR.toDataURL(url, {
-        width: 500,
-        margin: 0,
-        errorCorrectionLevel: 'M',
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
+      return canvas.toDataURL('image/png');
     }
 
     function createCircularText(ctx, text, centerX, centerY, radius, startAngle, endAngle, fontSize, fontWeight, withBackground) {
