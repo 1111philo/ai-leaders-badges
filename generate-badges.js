@@ -60,18 +60,18 @@ async function generateBadge(name, profileUrl, outputPath) {
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
   const nameUpper = name.toUpperCase();
-  const nameRadius = width * 0.29;
-  const nameFontSize = Math.floor(width * 0.032);
+  const nameRadius = width * 0.32;
+  const nameFontSize = Math.floor(width * 0.028);
   createCircularText(
     ctx,
     nameUpper,
     centerX,
     centerY,
     nameRadius,
-    Math.PI * 0.18,
-    Math.PI * 0.82,
+    -Math.PI * 0.68,
+    -Math.PI * 0.32,
     nameFontSize,
-    'bold'
+    'normal'
   );
 
   const buffer = canvas.toBuffer('image/png');
