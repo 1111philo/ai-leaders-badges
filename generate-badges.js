@@ -52,7 +52,7 @@ function createCircularText(ctx, text, centerX, centerY, radius, startAngle, end
 }
 
 async function generateBadge(name, profileUrl, outputPath) {
-  const mockupPath = path.join(__dirname, 'mockup.jpg');
+  const mockupPath = path.join(__dirname, 'mockup.png');
   const mockupImg = await canvasLoadImage(mockupPath);
 
   const width = mockupImg.width;
@@ -74,15 +74,20 @@ async function generateBadge(name, profileUrl, outputPath) {
 
   const nameUpper = name.toUpperCase();
   const nameRadius = width * 0.255;
-  const nameFontSize = Math.floor(width * 0.035);
+  const nameFontSize = Math.floor(width * 0.032);
+  const nameLength = nameUpper.length;
+  const totalAngle = Math.PI * 0.55;
+  const startAngle = -Math.PI / 2 - totalAngle / 2;
+  const endAngle = -Math.PI / 2 + totalAngle / 2;
+
   createCircularText(
     ctx,
     nameUpper,
     centerX,
     centerY,
     nameRadius,
-    -Math.PI * 0.6,
-    -Math.PI * 0.4,
+    startAngle,
+    endAngle,
     nameFontSize,
     'bold',
     true
