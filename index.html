@@ -276,7 +276,9 @@
   <script>
     // Wait for QRCode library to load
     window.addEventListener('load', () => {
-      if (typeof QRCode === 'undefined') {
+      console.log('QRCode available:', typeof QRCode);
+      console.log('window.QRCode:', window.QRCode);
+      if (typeof QRCode === 'undefined' && typeof window.QRCode === 'undefined') {
         showError('QRCode library failed to load. Please refresh the page.');
         console.error('QRCode library not loaded');
       }
@@ -433,10 +435,15 @@
     }
 
     async function generateQRCode(url) {
-      if (typeof QRCode === 'undefined') {
-        throw new Error('QRCode library not loaded');
+      // Try to access QRCode from window or global scope
+      const QR = window.QRCode || QRCode;
+
+      if (typeof QR === 'undefined' || typeof QR.toDataURL !== 'function') {
+        console.error('QRCode object:', QR);
+        throw new Error('QRCode library not loaded or toDataURL method not available');
       }
-      return await QRCode.toDataURL(url, {
+
+      return await QR.toDataURL(url, {
         width: 500,
         margin: 0,
         errorCorrectionLevel: 'M',
