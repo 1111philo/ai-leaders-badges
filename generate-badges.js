@@ -77,14 +77,14 @@ async function generateBadge(name, profileUrl, outputPath) {
   const nameLength = nameUpper.length;
 
   let nameFontSize;
-  if (nameLength <= 12) {
-    nameFontSize = Math.floor(width * 0.032);
-  } else if (nameLength <= 16) {
+  if (nameLength <= 10) {
     nameFontSize = Math.floor(width * 0.028);
-  } else if (nameLength <= 20) {
+  } else if (nameLength <= 14) {
     nameFontSize = Math.floor(width * 0.024);
-  } else {
+  } else if (nameLength <= 18) {
     nameFontSize = Math.floor(width * 0.020);
+  } else {
+    nameFontSize = Math.floor(width * 0.017);
   }
 
   const totalAngle = Math.PI * 0.38;
