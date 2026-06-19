@@ -69,14 +69,14 @@ async function generateBadge(name, profileUrl, outputPath) {
   const qrImg = await canvasLoadImage(qrDataUrl);
   const qrSize = Math.floor(width * 0.35);
   const qrX = centerX - qrSize / 2;
-  const qrY = centerY - qrSize / 2;
+  const qrY = centerY - qrSize / 2 + (height * 0.01);
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
   const nameUpper = name.toUpperCase();
   const nameRadius = width * 0.255;
   const nameFontSize = Math.floor(width * 0.032);
   const nameLength = nameUpper.length;
-  const totalAngle = Math.PI * 0.55;
+  const totalAngle = Math.PI * 0.38;
   const startAngle = -Math.PI / 2 - totalAngle / 2;
   const endAngle = -Math.PI / 2 + totalAngle / 2;
 
