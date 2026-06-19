@@ -16,9 +16,8 @@ async function generateQRCode(url) {
   });
 }
 
-function createCircularText(ctx, text, centerX, centerY, radius, startAngle, endAngle, fontSize, fontWeight = 'bold') {
+function createCircularText(ctx, text, centerX, centerY, radius, startAngle, endAngle, fontSize, fontWeight = 'bold', withBackground = false) {
   ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
-  ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
@@ -33,6 +32,20 @@ function createCircularText(ctx, text, centerX, centerY, radius, startAngle, end
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle + Math.PI / 2);
+
+    if (withBackground) {
+      const metrics = ctx.measureText(text[i]);
+      const padding = 4;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(
+        -metrics.width / 2 - padding,
+        -fontSize / 2 - padding,
+        metrics.width + padding * 2,
+        fontSize + padding * 2
+      );
+    }
+
+    ctx.fillStyle = '#000000';
     ctx.fillText(text[i], 0, 0);
     ctx.restore();
   }
@@ -60,18 +73,19 @@ async function generateBadge(name, profileUrl, outputPath) {
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
   const nameUpper = name.toUpperCase();
-  const nameRadius = width * 0.27;
-  const nameFontSize = Math.floor(width * 0.026);
+  const nameRadius = width * 0.255;
+  const nameFontSize = Math.floor(width * 0.035);
   createCircularText(
     ctx,
     nameUpper,
     centerX,
     centerY,
     nameRadius,
-    -Math.PI * 0.62,
-    -Math.PI * 0.38,
+    -Math.PI * 0.6,
+    -Math.PI * 0.4,
     nameFontSize,
-    'normal'
+    'bold',
+    true
   );
 
   const buffer = canvas.toBuffer('image/png');
