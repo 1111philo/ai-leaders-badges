@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Leaders Badge Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 800px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="url"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .preview {
+      margin-top: 30px;
+      text-align: center;
+      display: none;
+    }
+
+    .preview.show {
+      display: block;
+    }
+
+    .preview h3 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    #badgeCanvas {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .download-btn {
+      background: #10b981;
+    }
+
+    .download-btn:hover {
+      background: #059669;
+    }
+
+    .batch-results {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .batch-results.show {
+      display: block;
+    }
+
+    .batch-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .batch-item span {
+      font-weight: 500;
+    }
+
+    .batch-item button {
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+
+    .error {
+      background: #fee;
+      color: #c00;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      display: none;
+    }
+
+    .loading.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Leaders Badge Generator</h1>
+    <p class="subtitle">Create personalized badges with QR codes for AI Leaders course participants</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="single">Single Badge</button>
+      <button class="tab" data-tab="batch">Batch Upload</button>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="tab-content active" id="single">
+      <form id="singleForm">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label for="url">Profile URL</label>
+          <input type="url" id="url" placeholder="https://example.com/profile" required>
+        </div>
+        <button type="submit">Generate Badge</button>
+      </form>
+
+      <div class="preview" id="preview">
+        <h3>Your Badge</h3>
+        <canvas id="badgeCanvas"></canvas>
+        <br>
+        <button class="download-btn" id="downloadBtn">Download Badge</button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="batch">
+      <div class="form-group">
+        <label for="csvFile">Upload CSV File</label>
+        <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+          CSV format: name,url (with header row)
+        </p>
+        <input type="file" id="csvFile" accept=".csv">
+      </div>
+      <button id="batchBtn" disabled>Generate All Badges</button>
+
+      <div class="loading" id="loading">
+        <p>Generating badges... <span id="progress"></span></p>
+      </div>
+
+      <div class="batch-results" id="batchResults">
+        <h3>Generated Badges</h3>
+        <div id="batchList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mockupUrl = 'mockup.png';
+    let mockupImg = null;
+
+    // Load mockup image
+    const img = new Image();
+    img.onload = () => {
+      mockupImg = img;
+      console.log('Mockup loaded');
+    };
+    img.onerror = () => {
+      showError('Failed to load mockup.png. Make sure it exists in the same directory.');
+    };
+    img.src = mockupUrl;
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(target).classList.add('active');
+      });
+    });
+
+    // Single badge form
+    document.getElementById('singleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      if (!mockupImg) {
+        showError('Mockup image not loaded yet. Please wait.');
+        return;
+      }
+
+      const name = document.getElementById('name').value.trim();
+      const url = document.getElementById('url').value.trim();
+
+      try {
+        await generateBadge(name, url);
+        document.getElementById('preview').classList.add('show');
+      } catch (err) {
+        showError('Failed to generate badge: ' + err.message);
+      }
+    });
+
+    // Download button
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const canvas = document.getElementById('badgeCanvas');
+      const name = document.getElementById('name').value.trim();
+      const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}_badge.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    });
+
+    // CSV file upload
+    document.getElementById('csvFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      document.getElementById('batchBtn').disabled = !file;
+    });
+
+    // Batch generation
+    document.getElementById('batchBtn').addEventListener('click', async () => {
+      hideError();
+
+      if (!mockupImg) {
+        showError('Mockup image not loaded yet. Please wait.');
+        return;
+      }
+
+      const file = document.getElementById('csvFile').files[0];
+      if (!file) return;
+
+      const text = await file.text();
+      const lines = text.trim().split('\n');
+      const records = lines.slice(1).map(line => {
+        const [name, url] = line.split(',').map(s => s.trim());
+        return { name, url };
+      }).filter(r => r.name && r.url);
+
+      if (records.length === 0) {
+        showError('No valid records found in CSV');
+        return;
+      }
+
+      document.getElementById('loading').classList.add('show');
+      document.getElementById('batchBtn').disabled = true;
+
+      const results = [];
+      const progress = document.getElementById('progress');
+
+      for (let i = 0; i < records.length; i++) {
+        progress.textContent = `${i + 1} / ${records.length}`;
+        const { name, url } = records[i];
+
+        try {
+          const blob = await generateBadgeBlob(name, url);
+          results.push({ name, blob });
+        } catch (err) {
+          console.error(`Failed to generate badge for ${name}:`, err);
+        }
+
+        // Small delay to prevent browser freezing
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('batchBtn').disabled = false;
+
+      displayBatchResults(results);
+    });
+
+    function displayBatchResults(results) {
+      const list = document.getElementById('batchList');
+      list.innerHTML = '';
+
+      results.forEach(({ name, blob }) => {
+        const div = document.createElement('div');
+        div.className = 'batch-item';
+
+        const span = document.createElement('span');
+        span.textContent = name;
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Download';
+        btn.onclick = () => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          a.download = `${safeName}_badge.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+
+        div.appendChild(span);
+        div.appendChild(btn);
+        list.appendChild(div);
+      });
+
+      document.getElementById('batchResults').classList.add('show');
+    }
+
+    async function generateQRCode(url) {
+      return await QRCode.toDataURL(url, {
+        width: 500,
+        margin: 0,
+        errorCorrectionLevel: 'M',
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+    }
+
+    function createCircularText(ctx, text, centerX, centerY, radius, startAngle, endAngle, fontSize, fontWeight, withBackground) {
+      ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const totalAngle = endAngle - startAngle;
+      const angleStep = totalAngle / (text.length - 1);
+
+      for (let i = 0; i < text.length; i++) {
+        const angle = startAngle + (i * angleStep);
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle + Math.PI / 2);
+
+        if (withBackground) {
+          const metrics = ctx.measureText(text[i]);
+          const padding = 4;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(
+            -metrics.width / 2 - padding,
+            -fontSize / 2 - padding,
+            metrics.width + padding * 2,
+            fontSize + padding * 2
+          );
+        }
+
+        ctx.fillStyle = '#000000';
+        ctx.fillText(text[i], 0, 0);
+        ctx.restore();
+      }
+    }
+
+    async function generateBadge(name, url) {
+      const canvas = document.getElementById('badgeCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const width = mockupImg.width;
+      const height = mockupImg.height;
+      canvas.width = width;
+      canvas.height = height;
+
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      ctx.drawImage(mockupImg, 0, 0, width, height);
+
+      const qrDataUrl = await generateQRCode(url);
+      const qrImg = await loadImage(qrDataUrl);
+      const qrSize = Math.floor(width * 0.35);
+      const qrX = centerX - qrSize / 2;
+      const qrY = centerY - qrSize / 2 + (height * 0.01);
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      const nameUpper = name.toUpperCase();
+      const nameRadius = width * 0.255;
+      const nameLength = nameUpper.length;
+
+      let nameFontSize;
+      if (nameLength <= 10) {
+        nameFontSize = Math.floor(width * 0.028);
+      } else if (nameLength <= 14) {
+        nameFontSize = Math.floor(width * 0.024);
+      } else if (nameLength <= 18) {
+        nameFontSize = Math.floor(width * 0.020);
+      } else {
+        nameFontSize = Math.floor(width * 0.017);
+      }
+
+      const totalAngle = Math.PI * 0.38;
+      const startAngle = -Math.PI / 2 - totalAngle / 2;
+      const endAngle = -Math.PI / 2 + totalAngle / 2;
+
+      createCircularText(
+        ctx,
+        nameUpper,
+        centerX,
+        centerY,
+        nameRadius,
+        startAngle,
+        endAngle,
+        nameFontSize,
+        'bold',
+        true
+      );
+    }
+
+    async function generateBadgeBlob(name, url) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const width = mockupImg.width;
+      const height = mockupImg.height;
+      canvas.width = width;
+      canvas.height = height;
+
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      ctx.drawImage(mockupImg, 0, 0, width, height);
+
+      const qrDataUrl = await generateQRCode(url);
+      const qrImg = await loadImage(qrDataUrl);
+      const qrSize = Math.floor(width * 0.35);
+      const qrX = centerX - qrSize / 2;
+      const qrY = centerY - qrSize / 2 + (height * 0.01);
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      const nameUpper = name.toUpperCase();
+      const nameRadius = width * 0.255;
+      const nameLength = nameUpper.length;
+
+      let nameFontSize;
+      if (nameLength <= 10) {
+        nameFontSize = Math.floor(width * 0.028);
+      } else if (nameLength <= 14) {
+        nameFontSize = Math.floor(width * 0.024);
+      } else if (nameLength <= 18) {
+        nameFontSize = Math.floor(width * 0.020);
+      } else {
+        nameFontSize = Math.floor(width * 0.017);
+      }
+
+      const totalAngle = Math.PI * 0.38;
+      const startAngle = -Math.PI / 2 - totalAngle / 2;
+      const endAngle = -Math.PI / 2 + totalAngle / 2;
+
+      createCircularText(
+        ctx,
+        nameUpper,
+        centerX,
+        centerY,
+        nameRadius,
+        startAngle,
+        endAngle,
+        nameFontSize,
+        'bold',
+        true
+      );
+
+      return new Promise(resolve => {
+        canvas.toBlob(resolve);
+      });
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function showError(msg) {
+      const errorEl = document.getElementById('error');
+      errorEl.textContent = msg;
+      errorEl.classList.add('show');
+    }
+
+    function hideError() {
+      document.getElementById('error').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
